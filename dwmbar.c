@@ -2,13 +2,15 @@
 #include "stdio.h"
 #include "stdlib.h"
 #include "string.h"
-#include"unistd.h"
+#include "unistd.h"
 
+#include <sys/types.h>
+#include <sys/stat.h>
 #include <X11/Xlib.h>
 
 // Treat as linked list
 struct block {
-    char command[50];
+    char command[100];
     char label[50];
     int count;
     // Bring in signal functionality?
@@ -16,7 +18,7 @@ struct block {
     struct block *next;
 };
 
-static char statusstr[256];
+static char statusstr[300];
 char blockNum = 0;
 struct block *commandHead = NULL;
 struct block *currCommand = NULL;
@@ -34,8 +36,8 @@ void writeStatus();
 void writeStatus(char commandArr[blockNum][100])
 {
     // Combine commands to string
-    char tempHold[256] = "";
-    
+    char tempHold[300] = "";
+
     for (int i = 0; i < blockNum; ++i)
     {
         if (strcmp(tempHold, ""))    
@@ -73,10 +75,13 @@ void runCommand(struct block *block, char *output)
     fgets(tempHold, 100, cmdf);
     pclose(cmdf);
 
-    strcpy(output, "");
-    strcat(output, block->label);
-    strcat(output, " ");
-    strcat(output, tempHold);
+    //if (tempHold[0] != 'n')
+    {
+        strcpy(output, "");
+        strcat(output, block->label);
+        strcat(output, " ");
+        strcat(output, tempHold);
+    }
 
     // Remove new line
     char *token = strtok(output, "\n");
@@ -91,7 +96,7 @@ void getCommandOutput(int time, char commandArr[blockNum][100])
 
     for (int i = 0; i < blockNum; ++i)
     {
-        if ((time % temp->count == 0 && temp->count != 0) || time == -1)
+        if ((temp->count != 0 && time % temp->count == 0) || time == -1)
             runCommand(temp, commandArr[i]);
 
         temp = temp->next;
@@ -125,11 +130,10 @@ void initCommands()
             temp->next = NULL;
 
             // Get values
-            token = strtok(buffer, "#");
-            //temp->label = token;
+            token = strtok(buffer, ";");
             strcpy(temp->label, token);
 
-            token = strtok(NULL, "#");
+            token = strtok(NULL, ";");
             //temp->command = token;
             strcpy(temp->command, token);
 
@@ -157,9 +161,30 @@ void initCommands()
 int main()
 {
     // Setup daemon stuff
+    pid_t pid, sid;
+
+    pid = fork();
+    if (pid < 0)
+        exit(1);
+
+    if (pid > 0)
+        exit(0);
+
+    umask(0);
+
+    sid = setsid();
+    if (sid < 0)
+        exit(1);
+
 
     // Setup commands
     initCommands();
+
+    chdir("/");
+
+    close(STDIN_FILENO);
+    close(STDOUT_FILENO);
+    close(STDERR_FILENO);
 
     char commandOutput[blockNum][100];
 
@@ -167,8 +192,11 @@ int main()
     for (int i = 0; i < blockNum; ++i)
         strcpy(commandOutput[i], "");
 
+    char temp[300] = "";
+    sprintf(temp, "%s %s %i", commandHead->label, commandHead->command, commandHead->count);
+    system(temp);
+    
     getCommandOutput(-1, commandOutput);
-
     writeStatus(commandOutput);
 
     int count = 1;
@@ -180,12 +208,12 @@ int main()
         getCommandOutput(count, commandOutput);
 
         writeStatus(commandOutput);
-        
+
         ++count;
 
         if (count == maxCount)
             count = 1;
-        
+
         sleep(1);
     }
 

@@ -1,4 +1,7 @@
 # Use format Name#Command#Interval
-# Using hashes as delimiter because it is used as comment in shell scripting
-Test#date#5
-Test2#echo "hi"#10
+# Using ; as delimiter
+ ;~/bin/spotify;5
+M:;~/bin/memory;30
+B:;~/bin/battery;5
+#V:;~/bin/volume;10
+T:;~/bin/time;1
