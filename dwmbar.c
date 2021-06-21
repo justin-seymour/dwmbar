@@ -183,7 +183,7 @@ int main()
         
         ++count;
 
-        if (count == 500)
+        if (count == maxCount)
             count = 1;
         
         sleep(1);
