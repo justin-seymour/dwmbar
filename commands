@@ -1,0 +1,4 @@
+# Use format Name#Command#Interval
+# Using hashes as delimiter because it is used as comment in shell scripting
+Test#date#5
+Test2#echo "hi"#10
