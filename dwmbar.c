@@ -75,13 +75,10 @@ void runCommand(struct block *block, char *output)
     fgets(tempHold, 100, cmdf);
     pclose(cmdf);
 
-    //if (tempHold[0] != 'n')
-    {
-        strcpy(output, "");
-        strcat(output, block->label);
-        strcat(output, " ");
-        strcat(output, tempHold);
-    }
+    strcpy(output, "");
+    strcat(output, block->label);
+    strcat(output, " ");
+    strcat(output, tempHold);
 
     // Remove new line
     char *token = strtok(output, "\n");
@@ -130,10 +127,10 @@ void initCommands()
             temp->next = NULL;
 
             // Get values
-            token = strtok(buffer, ";");
+            token = strtok(buffer, ",");
             strcpy(temp->label, token);
 
-            token = strtok(NULL, ";");
+            token = strtok(NULL, ",");
             //temp->command = token;
             strcpy(temp->command, token);
 
@@ -195,7 +192,7 @@ int main()
     char temp[300] = "";
     sprintf(temp, "%s %s %i", commandHead->label, commandHead->command, commandHead->count);
     system(temp);
-    
+
     getCommandOutput(-1, commandOutput);
     writeStatus(commandOutput);
 

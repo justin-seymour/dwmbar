@@ -1,7 +1,7 @@
-# Use format Name#Command#Interval
-# Using ; as delimiter
- ;~/bin/spotify;5
-M:;~/bin/memory;30
-B:;~/bin/battery;5
-#V:;~/bin/volume;10
-T:;~/bin/time;1
+# Use format Name,Command,Interval
+# Using , as delimiter
+ ,~/bin/spotify,5
+M:,~/bin/memory,20
+B:,~/bin/battery,5
+V:,~/bin/volume,1
+T:,~/bin/time,1
