@@ -8,29 +8,20 @@
 #include <sys/stat.h>
 #include <X11/Xlib.h>
 
-// Treat as linked list
-struct block {
-    char command[100];
+// Stored as array in header
+typedef struct {
     char label[50];
+    char command[100];
     int count;
     // Bring in signal functionality?
 
-    struct block *next;
-};
+    //struct block *next;
+} Block;
+
+#include "commands.h"
 
 static char statusstr[300];
 char blockNum = 0;
-struct block *commandHead = NULL;
-struct block *currCommand = NULL;
-
-char *delim = " | ";
-
-//void setroot();
-//static void (*writestatus) () = setroot;
-void runCommand(struct block *block, char *output);
-void getCommandOutput(int count, char commandArr[blockNum][100]);
-void initCommands();
-void writeStatus();
 
 // Write to status bar
 void writeStatus(char commandArr[blockNum][100])
@@ -59,11 +50,10 @@ void writeStatus(char commandArr[blockNum][100])
         XStoreName(d, root, statusstr);
         XCloseDisplay(d);
     }
-
 }
 
 // Run command and return output
-void runCommand(struct block *block, char *output)
+void runCommand(Block *block, char *output)
 {
     char *cmd = block->command;
     FILE *cmdf = popen(cmd, "r");
@@ -80,6 +70,7 @@ void runCommand(struct block *block, char *output)
     strcat(output, " ");
     strcat(output, tempHold);
 
+
     // Remove new line
     char *token = strtok(output, "\n");
 
@@ -89,70 +80,17 @@ void runCommand(struct block *block, char *output)
 // Get output from all blocks and place into array
 void getCommandOutput(int time, char commandArr[blockNum][100])
 {
-    struct block *temp = commandHead;
-
     for (int i = 0; i < blockNum; ++i)
     {
-        if ((temp->count != 0 && time % temp->count == 0) || time == -1)
-            runCommand(temp, commandArr[i]);
+        if ((blocks[i].count != 0 && time % blocks[i].count == 0) || time == -1)
+            runCommand(&blocks[i], commandArr[i]);
 
-        temp = temp->next;
     }
 }
 
-// Read commands from file and insert into linked list
-void initCommands()
+void getBlockNum()
 {
-    FILE *fp = fopen("commands","r");
-
-    if (fp == NULL)
-    {
-        printf("Could not open file\n");
-        exit(EXIT_FAILURE);
-    }
-
-    int bufferLength = 100;
-    char buffer[bufferLength];
-
-    char *token;
-    struct block *temp = NULL;
-
-    while(fgets(buffer, bufferLength, fp))
-    {
-        // Rudimentary comment blocking
-        if (buffer[0] != '#')
-        {
-            // Init node
-            temp = (struct block*)malloc(sizeof(struct block));
-            temp->next = NULL;
-
-            // Get values
-            token = strtok(buffer, ",");
-            strcpy(temp->label, token);
-
-            token = strtok(NULL, ",");
-            //temp->command = token;
-            strcpy(temp->command, token);
-
-            token = strtok(NULL, "/n");
-            temp->count = atoi(token);
-
-            if (commandHead == NULL)
-                commandHead = temp;
-            else
-            {
-                currCommand = commandHead;
-                while (currCommand->next != NULL)
-                    currCommand = currCommand->next;
-
-                currCommand->next = temp;
-            }
-
-            ++blockNum;
-        }
-    }
-
-    fclose(fp);
+    blockNum = sizeof blocks / sizeof blocks[0];
 }
 
 int main()
@@ -174,25 +112,23 @@ int main()
         exit(1);
 
 
-    // Setup commands
-    initCommands();
-
     chdir("/");
 
     close(STDIN_FILENO);
     close(STDOUT_FILENO);
     close(STDERR_FILENO);
 
+    // Get number of blocks
+    getBlockNum();
+
+    // Create output string
     char commandOutput[blockNum][100];
 
     // Remove garbage
     for (int i = 0; i < blockNum; ++i)
         strcpy(commandOutput[i], "");
 
-    char temp[300] = "";
-    sprintf(temp, "%s %s %i", commandHead->label, commandHead->command, commandHead->count);
-    system(temp);
-
+    // Get initial state
     getCommandOutput(-1, commandOutput);
     writeStatus(commandOutput);
 
