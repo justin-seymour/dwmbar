@@ -11,14 +11,13 @@
 // Stored as array in header
 typedef struct {
     char label[50];
-    char command[100];
+    void (*function)(char *);
     int count;
-    // Bring in signal functionality?
 
-    //struct block *next;
+    // Bring in signal functionality?
 } Block;
 
-#include "commands.h"
+#include "commands.c"
 
 static char statusstr[300];
 char blockNum = 0;
@@ -55,26 +54,22 @@ void writeStatus(char commandArr[blockNum][100])
 // Run command and return output
 void runCommand(Block *block, char *output)
 {
-    char *cmd = block->command;
-    FILE *cmdf = popen(cmd, "r");
+    // Call function and write output to hold
+    char hold[100];
+    (*block->function)(hold);
 
-    if (!cmdf)
+    // Return early if string is empty
+    if (strcmp(hold, "") == 0)
         return;
 
-    char tempHold[100] = "";
-    fgets(tempHold, 100, cmdf);
-    pclose(cmdf);
+    // Add label to it
+    char newString[150] = "";
+    strcat(newString, block->label);
+    strcat(newString, " ");
+    strcat(newString, hold);
 
-    strcpy(output, "");
-    strcat(output, block->label);
-    strcat(output, " ");
-    strcat(output, tempHold);
-
-
-    // Remove new line
-    char *token = strtok(output, "\n");
-
-    strcpy(output, token);
+    // Output command
+    strcpy(output, newString);
 }
 
 // Get output from all blocks and place into array
