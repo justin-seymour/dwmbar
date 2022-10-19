@@ -65,7 +65,6 @@ void runCommand(Block *block, char *output)
     // Add label to it
     char newString[150] = "";
     strcat(newString, block->label);
-    strcat(newString, " ");
     strcat(newString, hold);
 
     // Output command

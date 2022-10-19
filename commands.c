@@ -4,11 +4,14 @@ const char * callScript(char *cmd)
 {
     FILE *cmdf = popen(cmd, "r");
 
-    if (!cmdf)
-        return "";
+    if (cmdf == NULL)
+        return "Err";
 
     char tempHold[100] = "";
-    fgets(tempHold, 100, cmdf);
+
+    if (fgets(tempHold, 100, cmdf) == NULL)
+        return "Err";
+
     pclose(cmdf);
 
     // Remove new line
@@ -44,9 +47,9 @@ void getTime(char *output)
 // Set commands as array
 Block blocks[] = {
     /* {"", "~/bin/spotify", 5}, */
-    {"M:", &getMemoryUsage, 20},
-    {"B:", &getBattery, 5},
-    {"V:", &getVolume, 1},
+    {"M: ", &getMemoryUsage, 20},
+    {"B: ", &getBattery, 60},
+    {"V: ", &getVolume, 1},
     {"", &getTime, 1}
 };
 
